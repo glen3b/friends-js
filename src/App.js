@@ -6,29 +6,17 @@ import { useState } from 'react';
 import { FriendTable } from './CoreComponents';
 import { FriendModel } from './DataModels';
 
+import { v4 as uuidv4 } from 'uuid';
+
 function App() {
-  const [friendList, setFriendList] = useState([
-    new FriendModel(1, "John Smith")
-  ]);
+  const [friendList, setFriendList] = useState([]);
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <FriendTable persons={friendList} />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <FriendTable persons={friendList} onAddFriend={(first, last) => {
+        let newList = friendList.slice();
+        newList.push(new FriendModel(uuidv4(), first + " " + last));
+        setFriendList(newList);
+      }} onDeleteFriend={(person) => setFriendList(friendList.filter(x => x.id !== person.id))} />
   );
 }
 

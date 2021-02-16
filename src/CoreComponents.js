@@ -2,11 +2,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
+import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl'
 import Modal from 'react-bootstrap/Modal';
 import Row from 'react-bootstrap/Row';
-import Table from 'react-bootstrap/Table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrashAlt, faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
 
@@ -37,22 +37,22 @@ class LogEventModal extends React.Component {
 class FriendTable extends React.Component {
   render() {
     return (
-      <>
-        <Table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.props.persons.map((friend) =>
-              <FriendRow key={friend.id} person={friend} />
-            )}
-          </tbody>
-        </Table>
-        <FriendAddRow />
-      </>
+      <Container>
+          {(this.props.persons.length > 0 && (
+            <Row>
+              <Col>Name</Col>
+              <Col lg={2}>Actions</Col>
+            </Row>)) || (
+              <Row>
+                {"No friends yet!"}
+              </Row>
+            )
+          }
+          {this.props.persons.map((friend) =>
+            <FriendRow key={friend.id} person={friend} onDelete={this.props.onDeleteFriend} />
+          )}
+        <FriendAddRow onSubmit={this.props.onAddFriend} />
+      </Container>
     );
   }
 }
@@ -61,24 +61,36 @@ class FriendAddRow extends React.Component {
   constructor(props) {
     super(props);
     this.handleFormSubmit = this.handleFormSubmit.bind(this);
+    this.handleFirstNameChange = this.handleFirstNameChange.bind(this);
+    this.handleLastNameChange = this.handleLastNameChange.bind(this);
+    this.state = {firstName: '', lastName: ''};
+  }
+
+  handleFirstNameChange(e) {
+    this.setState({firstName: e.target.value});
+  }
+
+  handleLastNameChange(e) {
+    this.setState({lastName: e.target.value});
   }
 
   handleFormSubmit(e) {
-    alert("hi");
+    this.props.onSubmit(this.state.firstName, this.state.lastName);
+    this.setState({firstName: '', lastName: ''});
     e.preventDefault();
   }
 
   render() {
     return (
       <Form onSubmit={this.handleFormSubmit}>
-        <Form.Row className="align-items-center">
-          <Col sm={5}>
-            <Form.Control id="inlineFormInputName" aria-label="First Name" placeholder="First" />
+        <Form.Row>
+          <Col>
+            <Form.Control aria-label="First Name" placeholder="First" onChange={this.handleFirstNameChange} value={this.state.firstName} />
           </Col>
-          <Col sm={5}>
-            <FormControl aria-label="Last Name" placeholder="Last" />
+          <Col>
+            <FormControl aria-label="Last Name" placeholder="Last" onChange={this.handleLastNameChange} value={this.state.lastName} />
           </Col>
-          <Col xs="auto">
+          <Col lg={2}>
             <Button variant="success" type="submit"><FontAwesomeIcon icon={faPlus} /></Button>
           </Col>
         </Form.Row>
@@ -104,14 +116,15 @@ class FriendRow extends React.Component {
 
   render() {
     return (
-      <tr>
-        <td>{this.props.person.name}</td>
+      <Row>
+        <Col>{this.props.person.name}</Col>
 
-        <td>
-          <Button variant="success" onClick={this.handleLogClick}><FontAwesomeIcon icon={faCalendarPlus} /></Button>
+        <Col lg={2}>
+          <Button onClick={this.handleLogClick}><FontAwesomeIcon icon={faCalendarPlus} /></Button>
           {' '}
-          <Button variant="danger" onClick={this.handleDeleteClick}><FontAwesomeIcon icon={faTrashAlt} /></Button></td>
-      </tr>
+          <Button variant="danger" onClick={this.handleDeleteClick}><FontAwesomeIcon icon={faTrashAlt} /></Button>
+        </Col>
+      </Row>
     );
   }
 }
