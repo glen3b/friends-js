@@ -6,9 +6,31 @@ import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl'
 import Modal from 'react-bootstrap/Modal';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
 import Row from 'react-bootstrap/Row';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrashAlt, faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
+
+class FriendsApplicationNavbar extends React.Component {
+
+  render() {
+    // TODO 
+
+    return (
+      <Navbar bg="light" expand="lg" fixed="top">
+        <Navbar.Brand href="#home">Friends.JS</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="mr-auto">
+            <Nav.Link href="#home">Home</Nav.Link>
+          </Nav>
+          <b>Login Info Here</b>
+        </Navbar.Collapse>
+      </Navbar>
+    );
+  }
+}
 
 class LogEventModal extends React.Component {
 
@@ -39,7 +61,7 @@ class FriendTable extends React.Component {
     return (
       <Container>
           {(this.props.persons.length > 0 && (
-            <Row>
+            <Row className={"table-header"}>
               <Col>Name</Col>
               <Col lg={2}>Actions</Col>
             </Row>)) || (
@@ -51,6 +73,7 @@ class FriendTable extends React.Component {
           {this.props.persons.map((friend) =>
             <FriendRow key={friend.id} person={friend} onDelete={this.props.onDeleteFriend} />
           )}
+        <hr/>
         <FriendAddRow onSubmit={this.props.onAddFriend} />
       </Container>
     );
@@ -60,6 +83,7 @@ class FriendTable extends React.Component {
 class FriendAddRow extends React.Component {
   constructor(props) {
     super(props);
+    this.firstNameRef = React.createRef();
     this.handleFormSubmit = this.handleFormSubmit.bind(this);
     this.handleFirstNameChange = this.handleFirstNameChange.bind(this);
     this.handleLastNameChange = this.handleLastNameChange.bind(this);
@@ -78,6 +102,7 @@ class FriendAddRow extends React.Component {
     this.props.onSubmit(this.state.firstName, this.state.lastName);
     this.setState({firstName: '', lastName: ''});
     e.preventDefault();
+    this.firstNameRef.current.focus();
   }
 
   render() {
@@ -85,7 +110,7 @@ class FriendAddRow extends React.Component {
       <Form onSubmit={this.handleFormSubmit}>
         <Form.Row>
           <Col>
-            <Form.Control aria-label="First Name" placeholder="First" onChange={this.handleFirstNameChange} value={this.state.firstName} />
+            <Form.Control aria-label="First Name" placeholder="First" onChange={this.handleFirstNameChange} ref={this.firstNameRef} value={this.state.firstName} />
           </Col>
           <Col>
             <FormControl aria-label="Last Name" placeholder="Last" onChange={this.handleLastNameChange} value={this.state.lastName} />
@@ -116,7 +141,7 @@ class FriendRow extends React.Component {
 
   render() {
     return (
-      <Row>
+      <Row className={"table-row"}>
         <Col>{this.props.person.name}</Col>
 
         <Col lg={2}>
@@ -129,4 +154,4 @@ class FriendRow extends React.Component {
   }
 }
 
-export { FriendTable, FriendRow, LogEventModal };
+export { FriendsApplicationNavbar, FriendTable, FriendRow, LogEventModal };
