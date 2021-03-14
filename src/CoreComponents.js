@@ -33,21 +33,35 @@ class FriendsApplicationNavbar extends React.Component {
 }
 
 class LogEventModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleCancellationClose = this.handleCancellationClose.bind(this);
+    this.handleAffirmativeClose = this.handleAffirmativeClose.bind(this);
+  }
+
+  handleCancellationClose(e) {
+    this.props.onCancel(this.props.person);
+  }
+
+  handleAffirmativeClose(e) {
+    this.props.onSave(this.props.person);
+  }
 
   render() {
-    // TODO 
+    // TODO design an inner form showing appropriate person-summary, and
+    // prompting for event log details
 
     return (
-      <Modal show={false} onHide={() => alert('hide')}>
+      <Modal show={!!this.props.person} onHide={this.handleCancellationClose}>
         <Modal.Header closeButton>
           <Modal.Title>Modal heading</Modal.Title>
         </Modal.Header>
         <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => alert('close')}>
+          <Button variant="secondary" onClick={this.handleCancellationClose}>
             Close
                 </Button>
-          <Button variant="primary" onClick={() => alert('submit')}>
+          <Button variant="primary" onClick={this.handleAffirmativeClose}>
             Save Changes
                 </Button>
         </Modal.Footer>

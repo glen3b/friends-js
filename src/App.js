@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import Container from 'react-bootstrap/Container';
 
-import { FriendsApplicationNavbar, FriendTable } from './CoreComponents';
+import { FriendsApplicationNavbar, FriendTable, LogEventModal } from './CoreComponents';
 import { FriendModel } from './DataModels';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -15,6 +15,7 @@ function App() {
 
   return (
     <>
+      <LogEventModal/>
       <FriendsApplicationNavbar/>
       <Container className={"body-navbar-compensate"}>
         <FriendTable persons={friendList} onAddFriend={(first, last) => {
