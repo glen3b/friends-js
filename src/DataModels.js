@@ -5,4 +5,15 @@ class FriendModel {
     }
 }
 
-export { FriendModel };
+class EventModel {
+    constructor(person, desc, date, rating) {
+        // foreign key
+        this.otherPerson = person;
+
+        this.description = desc;
+        this.date = date;
+        this.rating = rating;
+    }
+}
+
+export { FriendModel, EventModel };

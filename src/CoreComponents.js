@@ -11,6 +11,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import Row from 'react-bootstrap/Row';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrashAlt, faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
+import { EventModel } from './DataModels';
 
 class FriendsApplicationNavbar extends React.Component {
 
@@ -37,33 +38,85 @@ class LogEventModal extends React.Component {
     super(props);
     this.handleCancellationClose = this.handleCancellationClose.bind(this);
     this.handleAffirmativeClose = this.handleAffirmativeClose.bind(this);
+    this.handleFormSubmit = this.handleFormSubmit.bind(this);
+
+    // for convenience in a many-field situation, use refs not controlled
+    // TODO is "form cleared when modal closes" safe to rely on?
+    this.dateRef = React.createRef();
+    this.descRef = React.createRef();
+    this.ratingRef = React.createRef();
+    this.formRef = React.createRef();
+
+    this.state = {formValidated: false};
   }
 
   handleCancellationClose(e) {
-    this.props.onCancel(this.props.person);
+    this.setState({ formValidated: false });
+    this.props.onCancel();
   }
 
   handleAffirmativeClose(e) {
-    this.props.onSave(this.props.person);
+    if (this.formRef.current.checkValidity() === false) {
+      this.setState({ formValidated: true });
+    } else {
+      let retVal = new EventModel(this.props.person, this.descRef.current.value,
+        this.dateRef.current.value, this.ratingRef.current.value);
+
+      this.setState({ formValidated: false });
+      this.props.onSave(retVal);
+    }
+  }
+
+  handleFormSubmit(e) {
+    e.preventDefault();
+    this.handleAffirmativeClose();
   }
 
   render() {
-    // TODO design an inner form showing appropriate person-summary, and
-    // prompting for event log details
-
     return (
-      <Modal show={!!this.props.person} onHide={this.handleCancellationClose}>
+      <Modal show={!!this.props.person} onHide={this.handleCancellationClose} animation={false}>
         <Modal.Header closeButton>
-          <Modal.Title>Modal heading</Modal.Title>
+          <Modal.Title>Log Event For <span className={"personname-title"}>{this.props.person?.name}</span></Modal.Title>
         </Modal.Header>
-        <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
+        <Modal.Body>
+          <Form noValidate validated={this.state.formValidated} onSubmit={this.handleFormSubmit} ref={this.formRef} >
+            <Form.Group>
+              <Form.Label>Event Description</Form.Label>
+              <Form.Control type="text" placeholder="Description" required ref={this.descRef} />
+              <Form.Text className="text-muted">
+                Anything you need to identify the meeting.
+              </Form.Text>
+              {/*
+              <Form.Control.Feedback type="invalid">
+                A description is required.
+              </Form.Control.Feedback>
+              */}
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Date</Form.Label>
+              <Form.Control type="date" required ref={this.dateRef} />
+              <Form.Text className="text-muted">
+                When this event took place.
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Rating</Form.Label>
+              <Form.Control type="range" custom ref={this.ratingRef} />
+              <Form.Text className="text-muted">
+                How you felt about your friend! Higher is better.
+              </Form.Text>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={this.handleCancellationClose}>
-            Close
-                </Button>
+            Cancel
+          </Button>
           <Button variant="primary" onClick={this.handleAffirmativeClose}>
-            Save Changes
-                </Button>
+            Save
+          </Button>
         </Modal.Footer>
       </Modal>
     );
@@ -71,25 +124,49 @@ class LogEventModal extends React.Component {
 }
 
 class FriendTable extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onFriendLog = this.onFriendLog.bind(this);
+    this.friendLogModalCancel = this.friendLogModalCancel.bind(this);
+    this.friendLogModalSave = this.friendLogModalSave.bind(this);
+    this.state = { activeEventEditFriend: null };
+  }
+
+  onFriendLog(person) {
+    this.setState({ activeEventEditFriend: person });
+  }
+
+  friendLogModalCancel() {
+    this.setState({ activeEventEditFriend: null });
+  }
+
+  friendLogModalSave(event) {
+    this.setState({ activeEventEditFriend: null });
+    this.props.onLogFriendEvent(event);
+  }
+
   render() {
     return (
-      <Container>
-          {(this.props.persons.length > 0 && (
-            <Row className={"table-header"}>
-              <Col>Name</Col>
-              <Col lg={2}>Actions</Col>
-            </Row>)) || (
-              <Row>
-                {"No friends yet!"}
-              </Row>
-            )
-          }
-          {this.props.persons.map((friend) =>
-            <FriendRow key={friend.id} person={friend} onDelete={this.props.onDeleteFriend} />
-          )}
-        <hr/>
-        <FriendAddRow onSubmit={this.props.onAddFriend} />
-      </Container>
+      <>
+        <LogEventModal person={this.state.activeEventEditFriend} onCancel={this.friendLogModalCancel} onSave={this.friendLogModalSave} />
+        <Container>
+            {(this.props.persons.length > 0 && (
+              <Row className={"table-header"}>
+                <Col>Name</Col>
+                <Col lg={2}>Actions</Col>
+              </Row>)) || (
+                <Row>
+                  {"No friends yet!"}
+                </Row>
+              )
+            }
+            {this.props.persons.map((friend) =>
+              <FriendRow key={friend.id} person={friend} onDelete={this.props.onDeleteFriend} onLogEvent={this.onFriendLog} />
+            )}
+          <hr/>
+          <FriendAddRow onSubmit={this.props.onAddFriend} />
+        </Container>
+      </>
     );
   }
 }
