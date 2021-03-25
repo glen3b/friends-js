@@ -1,5 +1,5 @@
 # friends-js
-Friends.js: a sample React app for keeping track of your friends.
+Friends.js: a sample React app for keeping track of your friends. [Relevant xkcd.](https://xkcd.com/701/)
 
 The intention of this project is for me to be able to build something less trivial than "hello world" in React.
 
