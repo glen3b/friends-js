@@ -59,7 +59,7 @@ class LogEventModal extends React.Component {
     if (this.formRef.current.checkValidity() === false) {
       this.setState({ formValidated: true });
     } else {
-      let retVal = new EventModel(this.props.person, this.descRef.current.value,
+      let retVal = new EventModel(this.props.person.id, this.descRef.current.value,
         this.dateRef.current.value, this.ratingRef.current.value);
 
       this.setState({ formValidated: false });
@@ -153,6 +153,7 @@ class FriendTable extends React.Component {
             {(this.props.persons.length > 0 && (
               <Row className={"table-header"}>
                 <Col>Name</Col>
+                <Col lg={2}>Rating</Col>
                 <Col lg={2}>Actions</Col>
               </Row>)) || (
                 <Row>
@@ -231,9 +232,28 @@ class FriendRow extends React.Component {
   }
 
   render() {
+    let ratingStyleClass;
+    let avgRating = this.props.person.events
+      .reduce((all, one, _, src) => all += one.rating / src.length, 0);
+    
+
+    if (this.props.person.events.length === 0) {
+      ratingStyleClass = "text-muted";
+    } else if (avgRating >= 60) {
+      ratingStyleClass = "text-success";
+    } else if (avgRating >= 25) {
+      ratingStyleClass = "text-warning";
+    } else {
+      ratingStyleClass = "text-danger";
+    }
+
     return (
       <Row className={"table-row"}>
         <Col>{this.props.person.name}</Col>
+
+        <Col lg={2} className={ratingStyleClass}>
+          {this.props.person.events.length === 0 ? "N/A" : avgRating.toFixed(1)}
+        </Col>
 
         <Col lg={2}>
           <Button onClick={this.handleLogClick}><FontAwesomeIcon icon={faCalendarPlus} /></Button>

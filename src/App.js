@@ -23,7 +23,7 @@ function App() {
           setFriendList(newList);
         }}
           onDeleteFriend={(person) => setFriendList(friendList.filter(x => x.id !== person.id))}
-          onLogFriendEvent={(event) => alert(JSON.stringify(event))} />
+          onLogFriendEvent={(event) => setFriendList(friendList.map(x => x.id === event.personId ? x.cloneWithEvent(event) : x))} />
       </Container>
     </>
   );
