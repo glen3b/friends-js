@@ -33,6 +33,37 @@ class FriendsApplicationNavbar extends React.Component {
   }
 }
 
+class ManageEventsModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleClose = this.handleClose.bind(this);
+
+    this.state = {};
+  }
+
+  handleClose(e) {
+    // TODO
+  }
+
+  render() {
+    // TODO list of events in body, each showing details and delete button
+    return (
+      <Modal show={!!this.props.person} onHide={this.handleClose} animation={false}>
+        <Modal.Header closeButton>
+          <Modal.Title>Logged Events For <span className={"personname-title"}>{this.props.person?.name}</span></Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={this.handleClose}>
+            Ok
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
+}
+
 class LogEventModal extends React.Component {
   constructor(props) {
     super(props);
@@ -232,27 +263,15 @@ class FriendRow extends React.Component {
   }
 
   render() {
-    let ratingStyleClass;
-    let avgRating = this.props.person.events
-      .reduce((all, one, _, src) => all += one.rating / src.length, 0);
+    let avgRating = this.props.person.events.length > 0 ? this.props.person.events
+      .reduce((all, one, _, src) => all += one.rating / src.length, 0) : NaN;
     
-
-    if (this.props.person.events.length === 0) {
-      ratingStyleClass = "text-muted";
-    } else if (avgRating >= 60) {
-      ratingStyleClass = "text-success";
-    } else if (avgRating >= 25) {
-      ratingStyleClass = "text-warning";
-    } else {
-      ratingStyleClass = "text-danger";
-    }
-
     return (
       <Row className={"table-row"}>
         <Col>{this.props.person.name}</Col>
 
-        <Col lg={2} className={ratingStyleClass}>
-          {this.props.person.events.length === 0 ? "N/A" : avgRating.toFixed(1)}
+        <Col lg={2}>
+          <RatingTextDisplay rating={avgRating} />
         </Col>
 
         <Col lg={2}>
@@ -261,6 +280,30 @@ class FriendRow extends React.Component {
           <Button variant="danger" onClick={this.handleDeleteClick}><FontAwesomeIcon icon={faTrashAlt} /></Button>
         </Col>
       </Row>
+    );
+  }
+}
+
+class RatingTextDisplay extends React.Component {
+  render() {
+    let ratingStyleClass;
+    let rating = this.props.rating;
+    
+
+    if (!isFinite(rating)) {
+      ratingStyleClass = "text-muted";
+    } else if (rating >= 60) {
+      ratingStyleClass = "text-success";
+    } else if (rating >= 25) {
+      ratingStyleClass = "text-warning";
+    } else {
+      ratingStyleClass = "text-danger";
+    }
+
+    return (
+      <span className={ratingStyleClass}>
+          {!isFinite(rating) ? "N/A" : rating.toFixed(1)}
+      </span>
     );
   }
 }
