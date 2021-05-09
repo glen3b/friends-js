@@ -35,11 +35,18 @@ class FriendTable extends React.Component {
       this.onFriendLog = this.onFriendLog.bind(this);
       this.friendLogModalCancel = this.friendLogModalCancel.bind(this);
       this.friendLogModalSave = this.friendLogModalSave.bind(this);
+      this.resolvePersonId = this.resolvePersonId.bind(this);
+      // these are person IDs
+      // we don't want to clone a person in here, because if our prop changes that state might become
+      //   invalid non-obviously
+      // a deletion does risk invalidating IDs but that will fail more obviously
+      // further, since we're not (ref)copying Persons, `resolvePersonId` will always
+      // mean that we're valid with respect to the property personMap
       this.state = { activeEventEditFriend: null, activeListEventFriend: null };
     }
   
     onFriendLog(person) {
-      this.setState({ activeEventEditFriend: person });
+      this.setState({ activeEventEditFriend: person.id });
     }
   
     friendLogModalCancel() {
@@ -52,20 +59,24 @@ class FriendTable extends React.Component {
     }
   
     onViewFriendEvents(person) {
-      this.setState({ activeListEventFriend: person });
+      this.setState({ activeListEventFriend: person.id });
     }
   
     friendEditModalClose() {
       this.setState({ activeListEventFriend: null });
     }
+
+    resolvePersonId(id) {
+        return id ? this.props.personMap[id] : null;
+    }
   
     render() {
       return (
         <>
-          <LogEventModal person={this.state.activeEventEditFriend} onCancel={this.friendLogModalCancel} onSave={this.friendLogModalSave} />
-          <ManageEventsModal person={this.state.activeListEventFriend} onClose={this.friendEditModalClose} onDeleteFriendEvent={this.props.onDeleteFriendEvent} />
+          <LogEventModal person={this.resolvePersonId(this.state.activeEventEditFriend)} onCancel={this.friendLogModalCancel} onSave={this.friendLogModalSave} />
+          <ManageEventsModal person={this.resolvePersonId(this.state.activeListEventFriend)} onClose={this.friendEditModalClose} onDeleteFriendEvent={this.props.onDeleteFriendEvent} />
           <Container>
-              {(this.props.persons.length > 0 && (
+              {(Object.keys(this.props.personMap).length > 0 && (
                 <Row className={"table-header"}>
                   <Col>Name</Col>
                   <Col lg={2}>Rating</Col>
@@ -76,7 +87,7 @@ class FriendTable extends React.Component {
                   </Row>
                 )
               }
-              {this.props.persons.map((friend) =>
+              {Object.values(this.props.personMap).map((friend) =>
                 <FriendRow key={friend.id} person={friend} onDelete={this.props.onDeleteFriend} onLogEvent={this.onFriendLog} onViewEvents={this.onViewFriendEvents} />
               )}
             <hr/>

@@ -11,7 +11,7 @@ import { FriendModel } from './DataModels';
 import { v4 as uuidv4 } from 'uuid';
 
 function App() {
-  const [friendList, setFriendList] = useState([]);
+  const [friendMap, setFriendMap] = useState({});
 
   function clonePersonRemovingEvent(person, event) {
     let retVal = person.clone();
@@ -19,18 +19,33 @@ function App() {
     return retVal;
   }
 
+  function cloneDictRemovingKey(dict, key) {
+    let retVal = {...dict};
+    delete retVal[key];
+    return retVal;
+  }
+
   return (
     <>
       <FriendsApplicationNavbar/>
       <Container className={"body-navbar-compensate"}>
-        <FriendTable persons={friendList} onAddFriend={(first, last) => {
-          let newList = friendList.slice();
-          newList.push(new FriendModel(uuidv4(), first + " " + last));
-          setFriendList(newList);
+        <FriendTable personMap={friendMap} onAddFriend={(first, last) => {
+          let newList = {...friendMap};
+          let newFriend = new FriendModel(uuidv4(), first + " " + last);
+          newList[newFriend.id] = newFriend;
+          setFriendMap(newList);
         }}
-          onDeleteFriend={(person) => setFriendList(friendList.filter(x => x.id !== person.id))}
-          onLogFriendEvent={(event) => setFriendList(friendList.map(x => x.id === event.personId ? x.cloneWithEvent(event.cloneWithId(uuidv4())) : x))}
-          onDeleteFriendEvent={(person, event) => setFriendList(friendList.map(x => x.id === person.id ? clonePersonRemovingEvent(x, event) : x))} />
+          onDeleteFriend={(person) => setFriendMap(cloneDictRemovingKey(friendMap, person.id))}
+          onLogFriendEvent={(event) => {
+            let newFriendMap = {...friendMap};
+            newFriendMap[event.personId] = newFriendMap[event.personId].cloneWithEvent(event.cloneWithId(uuidv4()));
+            setFriendMap(newFriendMap);
+          }}
+          onDeleteFriendEvent={(person, event) => {
+            let newFriendMap = {...friendMap};
+            newFriendMap[person.id] = clonePersonRemovingEvent(newFriendMap[person.id], event);
+            setFriendMap(newFriendMap);
+          }} />
       </Container>
     </>
   );
