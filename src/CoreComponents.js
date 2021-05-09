@@ -1,43 +1,21 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
+import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
-import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
-import FormControl from 'react-bootstrap/FormControl'
+import FormControl from 'react-bootstrap/FormControl';
+import ListGroup from 'react-bootstrap/ListGroup';
 import Modal from 'react-bootstrap/Modal';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
 import Row from 'react-bootstrap/Row';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrashAlt, faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
 import { EventModel } from './DataModels';
 
-class FriendsApplicationNavbar extends React.Component {
-
-  render() {
-    // TODO 
-
-    return (
-      <Navbar bg="light" expand="lg" fixed="top">
-        <Navbar.Brand href="#home">Friends.JS</Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="mr-auto">
-            <Nav.Link href="#home">Home</Nav.Link>
-          </Nav>
-          <b>Login Info Here</b>
-        </Navbar.Collapse>
-      </Navbar>
-    );
-  }
-}
-
 class ManageEventsModal extends React.Component {
   constructor(props) {
     super(props);
     this.handleClose = this.handleClose.bind(this);
-
     this.state = {};
   }
 
@@ -46,13 +24,26 @@ class ManageEventsModal extends React.Component {
   }
 
   render() {
-    // TODO list of events in body, each showing details and delete button
+    // list of events in body, each showing details and delete button
+    // this.props.onDeleteFriendEvent (person, event)
+    const eventList = this.props.person ? this.props.person.events : [];
+
     return (
       <Modal show={!!this.props.person} onHide={this.handleClose} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Logged Events For <span className={"personname-title"}>{this.props.person?.name}</span></Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <ListGroup>
+            {eventList.map((event) => 
+              <ListGroup.Item>{event.description}{' '}
+                <RatingTextDisplay variant="badge" rating={event.rating} />
+                <Button className="float-right" variant="danger" onClick={() => this.props.onDeleteFriendEvent(this.props.person, event)}>
+                  <FontAwesomeIcon icon={faTrashAlt} />
+                </Button>
+              </ListGroup.Item>
+            )}
+          </ListGroup>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="primary" onClick={this.handleClose}>
@@ -90,8 +81,9 @@ class LogEventModal extends React.Component {
     if (this.formRef.current.checkValidity() === false) {
       this.setState({ formValidated: true });
     } else {
+      // last param: event ID, undefined (delegate to caller)
       let retVal = new EventModel(this.props.person.id, this.descRef.current.value,
-        this.dateRef.current.value, this.ratingRef.current.value);
+        Date.parse(this.dateRef.current.value), parseFloat(this.ratingRef.current.value), undefined);
 
       this.setState({ formValidated: false });
       this.props.onSave(retVal);
@@ -150,66 +142,6 @@ class LogEventModal extends React.Component {
           </Button>
         </Modal.Footer>
       </Modal>
-    );
-  }
-}
-
-class FriendTable extends React.Component {
-  constructor(props) {
-    super(props);
-    this.onViewFriendEvents = this.onViewFriendEvents.bind(this);
-    this.friendEditModalClose = this.friendEditModalClose.bind(this);
-    this.onFriendLog = this.onFriendLog.bind(this);
-    this.friendLogModalCancel = this.friendLogModalCancel.bind(this);
-    this.friendLogModalSave = this.friendLogModalSave.bind(this);
-    this.state = { activeEventEditFriend: null, activeListEventFriend: null };
-  }
-
-  onFriendLog(person) {
-    this.setState({ activeEventEditFriend: person });
-  }
-
-  friendLogModalCancel() {
-    this.setState({ activeEventEditFriend: null });
-  }
-
-  friendLogModalSave(event) {
-    this.setState({ activeEventEditFriend: null });
-    this.props.onLogFriendEvent(event);
-  }
-
-  onViewFriendEvents(person) {
-    this.setState({ activeListEventFriend: person });
-  }
-
-  friendEditModalClose() {
-    this.setState({ activeListEventFriend: null });
-  }
-
-  render() {
-    return (
-      <>
-        <LogEventModal person={this.state.activeEventEditFriend} onCancel={this.friendLogModalCancel} onSave={this.friendLogModalSave} />
-        <ManageEventsModal person={this.state.activeListEventFriend} onClose={this.friendEditModalClose} />
-        <Container>
-            {(this.props.persons.length > 0 && (
-              <Row className={"table-header"}>
-                <Col>Name</Col>
-                <Col lg={2}>Rating</Col>
-                <Col lg={2}>Actions</Col>
-              </Row>)) || (
-                <Row>
-                  {"No friends yet!"}
-                </Row>
-              )
-            }
-            {this.props.persons.map((friend) =>
-              <FriendRow key={friend.id} person={friend} onDelete={this.props.onDeleteFriend} onLogEvent={this.onFriendLog} onViewEvents={this.onViewFriendEvents} />
-            )}
-          <hr/>
-          <FriendAddRow onSubmit={this.props.onAddFriend} />
-        </Container>
-      </>
     );
   }
 }
@@ -287,7 +219,7 @@ class FriendRow extends React.Component {
         <Col>{this.props.person.name}</Col>
 
         <Col lg={2}>
-          <Button variant="link" onClick={this.handleRatingClick}><RatingTextDisplay rating={avgRating} /></Button>
+          <Button variant="link" onClick={this.handleRatingClick}><RatingTextDisplay rating={avgRating} variant="text" /></Button>
         </Col>
 
         <Col lg={2}>
@@ -301,27 +233,65 @@ class FriendRow extends React.Component {
 }
 
 class RatingTextDisplay extends React.Component {
-  render() {
-    let ratingStyleClass;
-    let rating = this.props.rating;
-    
-
-    if (!isFinite(rating)) {
-      ratingStyleClass = "text-muted";
-    } else if (rating >= 60) {
-      ratingStyleClass = "text-success";
-    } else if (rating >= 25) {
-      ratingStyleClass = "text-warning";
-    } else {
-      ratingStyleClass = "text-danger";
+  static styleClassesByVariant = {
+    notApplicable: {
+      text: "text-muted",
+      badge: "secondary"
+    },
+    high: {
+      text: "text-success",
+      badge: "success"
+    },
+    medium: {
+      text: "text-warning",
+      badge: "warning"
+    },
+    low: {
+      text: "text-danger",
+      badge: "danger"
     }
+  };
 
+  renderText(className, innerText) {
     return (
-      <span className={ratingStyleClass}>
-          {!isFinite(rating) ? "N/A" : rating.toFixed(1)}
+      <span className={className}>
+          {innerText}
       </span>
     );
   }
+
+  renderBadge(variantName, innerText) {
+    return (
+      <Badge variant={variantName}>{innerText}</Badge>
+    );
+  }
+
+  render() {
+    let ratingStyleClass;
+    const rating = this.props.rating;
+    const variant = this.props.variant;
+    const classDict = RatingTextDisplay.styleClassesByVariant;
+
+    if (!isFinite(rating)) {
+      ratingStyleClass = classDict.notApplicable[variant];
+    } else if (rating >= 60) {
+      ratingStyleClass = classDict.high[variant];
+    } else if (rating >= 25) {
+      ratingStyleClass = classDict.medium[variant];
+    } else {
+      ratingStyleClass = classDict.low[variant];
+    }
+
+    const innerText = !isFinite(rating) ? "N/A" : rating.toFixed(1);
+
+    if (variant === "text") {
+      return this.renderText(ratingStyleClass, innerText);
+    } else if (variant === "badge") {
+      return this.renderBadge(ratingStyleClass, innerText);
+    } else {
+      throw new Error("Unrecognized variant " + variant);
+    }
+  }
 }
 
-export { FriendsApplicationNavbar, FriendTable, FriendRow, LogEventModal };
+export { LogEventModal, ManageEventsModal, FriendRow, FriendAddRow };
