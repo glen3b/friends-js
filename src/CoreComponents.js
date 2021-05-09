@@ -42,7 +42,7 @@ class ManageEventsModal extends React.Component {
   }
 
   handleClose(e) {
-    // TODO
+    this.props.onClose();
   }
 
   render() {
@@ -157,10 +157,12 @@ class LogEventModal extends React.Component {
 class FriendTable extends React.Component {
   constructor(props) {
     super(props);
+    this.onViewFriendEvents = this.onViewFriendEvents.bind(this);
+    this.friendEditModalClose = this.friendEditModalClose.bind(this);
     this.onFriendLog = this.onFriendLog.bind(this);
     this.friendLogModalCancel = this.friendLogModalCancel.bind(this);
     this.friendLogModalSave = this.friendLogModalSave.bind(this);
-    this.state = { activeEventEditFriend: null };
+    this.state = { activeEventEditFriend: null, activeListEventFriend: null };
   }
 
   onFriendLog(person) {
@@ -176,10 +178,19 @@ class FriendTable extends React.Component {
     this.props.onLogFriendEvent(event);
   }
 
+  onViewFriendEvents(person) {
+    this.setState({ activeListEventFriend: person });
+  }
+
+  friendEditModalClose() {
+    this.setState({ activeListEventFriend: null });
+  }
+
   render() {
     return (
       <>
         <LogEventModal person={this.state.activeEventEditFriend} onCancel={this.friendLogModalCancel} onSave={this.friendLogModalSave} />
+        <ManageEventsModal person={this.state.activeListEventFriend} onClose={this.friendEditModalClose} />
         <Container>
             {(this.props.persons.length > 0 && (
               <Row className={"table-header"}>
@@ -193,7 +204,7 @@ class FriendTable extends React.Component {
               )
             }
             {this.props.persons.map((friend) =>
-              <FriendRow key={friend.id} person={friend} onDelete={this.props.onDeleteFriend} onLogEvent={this.onFriendLog} />
+              <FriendRow key={friend.id} person={friend} onDelete={this.props.onDeleteFriend} onLogEvent={this.onFriendLog} onViewEvents={this.onViewFriendEvents} />
             )}
           <hr/>
           <FriendAddRow onSubmit={this.props.onAddFriend} />
@@ -252,6 +263,7 @@ class FriendRow extends React.Component {
     super(props);
     this.handleDeleteClick = this.handleDeleteClick.bind(this);
     this.handleLogClick = this.handleLogClick.bind(this);
+    this.handleRatingClick = this.handleRatingClick.bind(this);
   }
 
   handleDeleteClick(e) {
@@ -260,6 +272,10 @@ class FriendRow extends React.Component {
 
   handleLogClick(e) {
     this.props.onLogEvent(this.props.person);
+  }
+
+  handleRatingClick(e) {
+    this.props.onViewEvents(this.props.person);
   }
 
   render() {
@@ -271,7 +287,7 @@ class FriendRow extends React.Component {
         <Col>{this.props.person.name}</Col>
 
         <Col lg={2}>
-          <RatingTextDisplay rating={avgRating} />
+          <Button variant="link" onClick={this.handleRatingClick}><RatingTextDisplay rating={avgRating} /></Button>
         </Col>
 
         <Col lg={2}>
