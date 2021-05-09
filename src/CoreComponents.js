@@ -26,7 +26,9 @@ class ManageEventsModal extends React.Component {
   render() {
     // list of events in body, each showing details and delete button
     // this.props.onDeleteFriendEvent (person, event)
-    const eventList = this.props.person ? this.props.person.events : [];
+    let eventList = this.props.person ? this.props.person.events : [];
+    // descending-by-date list of events
+    eventList.sort((a, b) => b.date - a.date);
 
     return (
       <Modal show={!!this.props.person} onHide={this.handleClose} animation={false}>
