@@ -16,11 +16,23 @@ class ManageEventsModal extends React.Component {
   constructor(props) {
     super(props);
     this.handleClose = this.handleClose.bind(this);
-    this.state = {};
+    this.editEventCancel = this.editEventCancel.bind(this);
+    this.editEventSave = this.editEventSave.bind(this);
+    this.state = {editingEvent: null};
   }
 
   handleClose(e) {
+    this.setState({editingEvent: null});
     this.props.onClose();
+  }
+
+  editEventCancel() {
+    this.setState({editingEvent: null});
+  }
+
+  editEventSave(evt) {
+    this.setState({editingEvent: null});
+    this.props.onEditFriendEvent(this.props.person, evt);
   }
 
   render() {
@@ -31,28 +43,32 @@ class ManageEventsModal extends React.Component {
     eventList.sort((a, b) => b.date - a.date);
 
     return (
-      <Modal show={!!this.props.person} onHide={this.handleClose} animation={false}>
-        <Modal.Header closeButton>
-          <Modal.Title>Logged Events For <span className={"personname-title"}>{this.props.person?.name}</span></Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <ListGroup>
-            {eventList.map((event) => 
-              <ListGroup.Item>{event.description}{' '}
-                <RatingTextDisplay variant="badge" rating={event.rating} />
-                <Button className="float-right" variant="danger" onClick={() => this.props.onDeleteFriendEvent(this.props.person, event)}>
-                  <FontAwesomeIcon icon={faTrashAlt} />
-                </Button>
-              </ListGroup.Item>
-            )}
-          </ListGroup>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={this.handleClose}>
-            Ok
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <>
+        <LogEventModal person={this.state.editingEvent ? this.props.person : null} onCancel={this.editEventCancel} onSave={this.editEventSave} verb="Edit" defaultValue={this.state.editingEvent} />
+        <Modal show={this.props.person && !this.state.editingEvent} onHide={this.handleClose} animation={false}>
+          <Modal.Header closeButton>
+            <Modal.Title>Logged Events For <span className={"personname-title"}>{this.props.person?.name}</span></Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <ListGroup>
+              {eventList.map((event) => 
+                <ListGroup.Item key={event.id}>
+                  <Button variant="link" onClick={() => this.setState({editingEvent: event})}>{event.description}</Button>{' '}
+                  <RatingTextDisplay variant="badge" rating={event.rating} />
+                  <Button className="float-right" variant="danger" onClick={() => this.props.onDeleteFriendEvent(this.props.person, event)}>
+                    <FontAwesomeIcon icon={faTrashAlt} />
+                  </Button>
+                </ListGroup.Item>
+              )}
+            </ListGroup>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={this.handleClose}>
+              Ok
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </>
     );
   }
 }
@@ -63,6 +79,8 @@ class LogEventModal extends React.Component {
     this.handleCancellationClose = this.handleCancellationClose.bind(this);
     this.handleAffirmativeClose = this.handleAffirmativeClose.bind(this);
     this.handleFormSubmit = this.handleFormSubmit.bind(this);
+
+    this.dateToInputValue = this.dateToInputValue.bind(this);
 
     // for convenience in a many-field situation, use refs not controlled
     // TODO is "form cleared when modal closes" safe to rely on?
@@ -83,9 +101,9 @@ class LogEventModal extends React.Component {
     if (this.formRef.current.checkValidity() === false) {
       this.setState({ formValidated: true });
     } else {
-      // last param: event ID, undefined (delegate to caller)
-      let retVal = new EventModel(this.props.person.id, this.descRef.current.value,
-        Date.parse(this.dateRef.current.value), parseFloat(this.ratingRef.current.value), undefined);
+      // last param: event ID, undefined (delegate to caller) unless default given
+      let retVal = new EventModel(this.props.person.id, this.descRef.current.value, 
+        Date.parse(this.dateRef.current.value), parseFloat(this.ratingRef.current.value), this.props.defaultValue?.id);
 
       this.setState({ formValidated: false });
       this.props.onSave(retVal);
@@ -96,18 +114,28 @@ class LogEventModal extends React.Component {
     e.preventDefault();
     this.handleAffirmativeClose();
   }
+  
+  dateToInputValue(unixMillis) {
+    if (unixMillis === null) return null;
+    if (unixMillis === undefined) return undefined;
+    let date = new Date(unixMillis);
+
+    // https://stackoverflow.com/questions/6982692/how-to-set-input-type-dates-default-value-to-today
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0,10);
+  }
 
   render() {
     return (
       <Modal show={!!this.props.person} onHide={this.handleCancellationClose} animation={false}>
         <Modal.Header closeButton>
-          <Modal.Title>Log Event For <span className={"personname-title"}>{this.props.person?.name}</span></Modal.Title>
+          <Modal.Title>{this.props.verb} Event For <span className={"personname-title"}>{this.props.person?.name}</span></Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form noValidate validated={this.state.formValidated} onSubmit={this.handleFormSubmit} ref={this.formRef} >
             <Form.Group>
               <Form.Label>Event Description</Form.Label>
-              <Form.Control type="text" placeholder="Description" required ref={this.descRef} />
+              <Form.Control type="text" placeholder="Description" required ref={this.descRef} defaultValue={this.props.defaultValue?.description} />
               <Form.Text className="text-muted">
                 Anything you need to identify the meeting.
               </Form.Text>
@@ -120,7 +148,7 @@ class LogEventModal extends React.Component {
 
             <Form.Group>
               <Form.Label>Date</Form.Label>
-              <Form.Control type="date" required ref={this.dateRef} />
+              <Form.Control type="date" required ref={this.dateRef} defaultValue={this.dateToInputValue(this.props.defaultValue?.date)} />
               <Form.Text className="text-muted">
                 When this event took place.
               </Form.Text>
@@ -128,7 +156,7 @@ class LogEventModal extends React.Component {
 
             <Form.Group>
               <Form.Label>Rating</Form.Label>
-              <Form.Control type="range" custom ref={this.ratingRef} />
+              <Form.Control type="range" custom ref={this.ratingRef} defaultValue={this.props.defaultValue?.rating} />
               <Form.Text className="text-muted">
                 How you felt about your friend! Higher is better.
               </Form.Text>

@@ -73,8 +73,8 @@ class FriendTable extends React.Component {
     render() {
       return (
         <>
-          <LogEventModal person={this.resolvePersonId(this.state.activeEventEditFriend)} onCancel={this.friendLogModalCancel} onSave={this.friendLogModalSave} />
-          <ManageEventsModal person={this.resolvePersonId(this.state.activeListEventFriend)} onClose={this.friendEditModalClose} onDeleteFriendEvent={this.props.onDeleteFriendEvent} />
+          <LogEventModal person={this.resolvePersonId(this.state.activeEventEditFriend)} onCancel={this.friendLogModalCancel} onSave={this.friendLogModalSave} verb="Log" />
+          <ManageEventsModal person={this.resolvePersonId(this.state.activeListEventFriend)} onClose={this.friendEditModalClose} onDeleteFriendEvent={this.props.onDeleteFriendEvent} onEditFriendEvent={this.props.onEditFriendEvent} />
           <Container>
               {(Object.keys(this.props.personMap).length > 0 && (
                 <Row className={"table-header"}>

@@ -25,6 +25,12 @@ function App() {
     return retVal;
   }
 
+  function clonePersonEditingEvent(person, event) {
+    let retVal = person.clone();
+    retVal.events = retVal.events.map(x => x.id === event.id ? event.clone() : x);
+    return retVal;
+  }
+
   return (
     <>
       <FriendsApplicationNavbar/>
@@ -35,17 +41,22 @@ function App() {
           newList[newFriend.id] = newFriend;
           setFriendMap(newList);
         }}
-          onDeleteFriend={(person) => setFriendMap(cloneDictRemovingKey(friendMap, person.id))}
-          onLogFriendEvent={(event) => {
-            let newFriendMap = {...friendMap};
+          onDeleteFriend={(person) => setFriendMap(x => cloneDictRemovingKey(x, person.id))}
+          onLogFriendEvent={(event) => setFriendMap(x => {
+            let newFriendMap = {...x};
             newFriendMap[event.personId] = newFriendMap[event.personId].cloneWithEvent(event.cloneWithId(uuidv4()));
-            setFriendMap(newFriendMap);
-          }}
-          onDeleteFriendEvent={(person, event) => {
-            let newFriendMap = {...friendMap};
+            return newFriendMap;
+          })}
+          onDeleteFriendEvent={(person, event) => setFriendMap(x => {
+            let newFriendMap = {...x};
             newFriendMap[person.id] = clonePersonRemovingEvent(newFriendMap[person.id], event);
-            setFriendMap(newFriendMap);
-          }} />
+            return newFriendMap;
+          })}
+          onEditFriendEvent={(person, event) => setFriendMap(x => {
+            let newFriendMap={...x};
+            newFriendMap[person.id] = clonePersonEditingEvent(person, event);
+            return newFriendMap;
+          })} />
       </Container>
     </>
   );
